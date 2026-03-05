@@ -6,7 +6,6 @@ import WeightChart from '@/components/WeightChart';
 import GrowthSimulation from '@/components/GrowthSimulation';
 import AIBriefing from '@/components/AIBriefing';
 import { PortfolioItem, calculateRebalance } from '@/lib/calculator';
-import { fetchPortfolio } from '@/lib/portfolioService';
 import { Button } from '@/components/ui/button';
 import { RotateCcw, Download, Save } from 'lucide-react';
 
@@ -41,11 +40,10 @@ export default function Dashboard() {
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
 
   // ------------------------------------
-  // 초기 로드: localStorage → Supabase 순서로 시도
+  // 초기 로드: localStorage에서 복원 후 주가 재조회
   // ------------------------------------
   useEffect(() => {
     const loadData = async () => {
-      // 1) localStorage에 저장된 데이터가 있으면 우선 사용 (빠른 복원)
       const localData = loadFromLocalStorage();
       if (localData && localData.length > 0) {
         const savedMonthly = localStorage.getItem(LS_MONTHLY_KEY);
@@ -54,7 +52,7 @@ export default function Dashboard() {
         // 주가 재조회 (저장된 가격은 구식일 수 있으므로)
         const refreshed = await Promise.all(
           localData.map(async (item) => {
-            if (item.ticker === 'CASH') return item; // CASH는 항상 $1
+            if (item.ticker === 'CASH') return item;
             try {
               const res = await fetch(`/api/finance?ticker=${item.ticker}`);
               if (res.ok) {
@@ -68,33 +66,8 @@ export default function Dashboard() {
           })
         );
         setPortfolio(refreshed);
-        setIsLoading(false);
-        return; // localStorage 복원 성공 시 Supabase 호출 생략
       }
-
-      // 2) localStorage에 없으면 Supabase에서 로드 시도
-      try {
-        const dbItems = await fetchPortfolio();
-        const updatedItems = await Promise.all(
-          dbItems.map(async (item) => {
-            try {
-              const res = await fetch(`/api/finance?ticker=${item.ticker}`);
-              if (res.ok) {
-                const data = await res.json();
-                return { ...item, currentPrice: data.price };
-              }
-            } catch {
-              console.error(`Failed to fetch price for ${item.ticker}`);
-            }
-            return item;
-          })
-        );
-        setPortfolio(updatedItems);
-      } catch (error) {
-        console.error('Failed to load portfolio from DB:', error);
-      } finally {
-        setIsLoading(false);
-      }
+      setIsLoading(false);
     };
 
     loadData();
@@ -104,7 +77,7 @@ export default function Dashboard() {
   // 포트폴리오 변경 시 자동으로 localStorage에 저장
   // ------------------------------------
   useEffect(() => {
-    if (isLoading || portfolio.length === 0) return; // 로딩 중 또는 빈 배열은 저장 안 함
+    if (isLoading || portfolio.length === 0) return;
     saveToLocalStorage(portfolio, monthlyInvestment);
     setLastSavedAt(new Date().toLocaleTimeString('ko-KR'));
   }, [portfolio, monthlyInvestment, isLoading]);
@@ -122,7 +95,7 @@ export default function Dashboard() {
   }, []);
 
   // ------------------------------------
-  // 마지막 저장 데이터 불러오기 (현재 포트폴리오를 리셋 후 복원)
+  // 마지막 저장 데이터 불러오기
   // ------------------------------------
   const handleLoadLast = useCallback(async () => {
     const localData = loadFromLocalStorage();
@@ -134,7 +107,6 @@ export default function Dashboard() {
     const savedMonthly = localStorage.getItem(LS_MONTHLY_KEY);
     if (savedMonthly) setMonthlyInvestment(Number(savedMonthly));
 
-    // 주가 재조회 후 복원
     const refreshed = await Promise.all(
       localData.map(async (item) => {
         if (item.ticker === 'CASH') return item;
@@ -187,7 +159,7 @@ export default function Dashboard() {
             size="sm"
             onClick={handleReset}
             className="border-rose-800 text-rose-400 hover:bg-rose-900/20 hover:text-rose-300 flex gap-1"
-            title="포트폴리오를 초기화합니다 (확인 창이 표시됩니다)"
+            title="포트폴리오를 초기화합니다"
           >
             <RotateCcw size={14} />
             초기화
