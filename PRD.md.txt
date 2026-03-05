@@ -1,0 +1,78 @@
+1. 프로젝트 목표 및 개요
+프로젝트 명: Smart Portfolio Planner (SPP)
+
+핵심 가치: 직장인 투자자가 현재 자산과 목표 비중 사이의 간극을 확인하고, 월 적립금을 활용해 최적의 리밸런싱 매매 수량을 즉시 도출하는 대시보드.
+
+주요 기능:
+
+사용자 기본 정보(초기 자산, 월 적립금) 입력.
+
+현재 포트폴리오(종목명, 수량) 관리 및 실시간 주가 반영.
+
+목표 포트폴리오 비중 설정 및 목표 달성을 위한 필요 매매량 계산.
+
+리밸런싱 전/후 비중 시각화 및 향후 자산 성장 시뮬레이션.
+
+2. 기술 스택 (Tech Stack)
+Framework: Next.js 14+ (App Router)
+
+Language: TypeScript
+
+Styling: Tailwind CSS + Shadcn/UI (Dark Mode 기반)
+
+Database/Auth: Supabase
+
+Visualization: Recharts (도넛 차트, 라인 차트)
+
+Financial API: Yahoo Finance API (또는 실시간 시세 크롤러)
+
+AI Insight: Perplexity API (종목 뉴스 요약 및 리스크 분석)
+
+3. 아키텍처 및 폴더 구조
+AI 빌더는 아래 구조를 준수하여 파일을 생성할 것:
+
+Plaintext
+/root
+├── app/
+│   ├── api/finance/route.ts      # 주가 데이터 수집 API
+│   ├── api/ai-insight/route.ts   # Perplexity 연동 API
+│   ├── dashboard/page.tsx        # 메인 대시보드 화면
+│   └── layout.tsx                # 다크모드 전역 레이아웃
+├── components/
+│   ├── PortfolioTable.tsx        # 종목 입력 및 매매 수량 표시 테이블
+│   ├── WeightChart.tsx           # 현재 vs 목표 비중 도넛 차트
+│   └── GrowthSimulation.tsx      # 미래 자산 성장 라인 차트
+├── lib/
+│   ├── calculator.ts             # 리밸런싱 수량 계산 로직
+│   └── supabaseClient.ts         # DB 연결 설정
+└── types/                        # 포트폴리오 및 종목 타입 정의
+4. UI/UX 디자인 가이드라인
+Theme: Professional Dark Mode (Background: #09090b, Card: #18181b)
+
+Style: Bento Grid 레이아웃 (정보를 박스 형태로 격자 배치)
+
+Interactions: * 수량 입력 시 즉시 리밸런싱 결과가 업데이트되는 실시간 반응형 UI.
+
+매수 수량은 Emerald-500(녹색), 매도 수량은 Rose-500(적색)으로 강조.
+
+5. 세부 기능 및 실행 순서 (Implementation Roadmap)
+[Infrastructure]: Next.js 프로젝트 초기화 및 Supabase 연동 (Portfolios, Stocks 테이블 생성).
+
+[Finance Engine]: Ticker 입력 시 실시간 주가(Price)를 가져오는 API Route 구현.
+
+[Core Logic]: * 목표 자산 = 현재 총액 + 월 적립금
+
+종목별 필요 수량 = (목표 자산 * 목표 비중 / 현재가) - 현재 수량 계산 로직 작성.
+
+[Dashboard UI]: Shadcn/UI를 활용한 입력 폼 및 리밸런싱 결과 테이블 구현.
+
+[Visualization]: Recharts를 이용한 비중 비교 도넛 차트 및 성장 시뮬레이션 그래프 구현.
+
+[AI Layer]: Perplexity API를 사용하여 포트폴리오 내 주요 종목의 브리핑 영역 추가.
+
+6. QA 테스트 및 버그 기록
+[ ] 한국/미국 주식 티커(예: 005930.KS, TSLA) 모두 정상 작동하는가?
+
+[ ] 월 적립금이 0일 때도 리밸런싱 로직이 깨지지 않는가?
+
+[ ] Supabase에 저장된 데이터가 새로고침 시에도 유지되는가?
