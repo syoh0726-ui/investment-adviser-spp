@@ -4,8 +4,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import PortfolioTable from '@/components/PortfolioTable';
 import WeightChart from '@/components/WeightChart';
 import GrowthSimulation from '@/components/GrowthSimulation';
+import MonthlyProgressChart from '@/components/MonthlyProgressChart';
 import AIBriefing from '@/components/AIBriefing';
 import { PortfolioItem, calculateRebalance } from '@/lib/calculator';
+import { useMonthlyTracker } from '@/hooks/useMonthlyTracker';
 import { Button } from '@/components/ui/button';
 import { RotateCcw, Download, Save } from 'lucide-react';
 
@@ -38,6 +40,9 @@ export default function Dashboard() {
   const [monthlyInvestment, setMonthlyInvestment] = useState<number>(1000);
   const [isLoading, setIsLoading] = useState(true);
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
+
+  const { rebalancedItems, totalCurrentValue } = calculateRebalance(portfolio, monthlyInvestment);
+  const { records, clearRecords } = useMonthlyTracker(portfolio, totalCurrentValue);
 
   // ------------------------------------
   // 초기 로드: localStorage에서 복원 후 주가 재조회
@@ -89,10 +94,11 @@ export default function Dashboard() {
     if (!confirm('포트폴리오를 초기화하시겠습니까? 저장된 데이터가 모두 삭제됩니다.')) return;
     localStorage.removeItem(LS_PORTFOLIO_KEY);
     localStorage.removeItem(LS_MONTHLY_KEY);
+    clearRecords();
     setPortfolio([]);
     setMonthlyInvestment(1000);
     setLastSavedAt(null);
-  }, []);
+  }, [clearRecords]);
 
   // ------------------------------------
   // 마지막 저장 데이터 불러오기
@@ -125,8 +131,6 @@ export default function Dashboard() {
     setPortfolio(refreshed);
     setIsLoading(false);
   }, []);
-
-  const { rebalancedItems, totalCurrentValue } = calculateRebalance(portfolio, monthlyInvestment);
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white p-8">
@@ -189,6 +193,10 @@ export default function Dashboard() {
             initialAmount={totalCurrentValue}
             monthlyInvestment={monthlyInvestment}
           />
+        </section>
+
+        <section>
+          <MonthlyProgressChart records={records} monthlyInvestment={monthlyInvestment} />
         </section>
 
         <section>
