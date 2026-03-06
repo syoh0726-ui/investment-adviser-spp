@@ -1,6 +1,10 @@
 'use client';
 
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, useEffect } from 'react';
+
+// localStorage 키
+const LS_RETURN_KEY = 'spp_annual_return';
+const LS_YEARS_KEY  = 'spp_sim_years';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -35,8 +39,24 @@ interface GrowthSimulationProps {
 }
 
 export default function GrowthSimulation({ initialAmount, monthlyInvestment }: GrowthSimulationProps) {
-  const [annualReturnPct, setAnnualReturnPct] = useState(7);
-  const [years, setYears] = useState(20);
+  // localStorage에서 마지막으로 입력한 수익률/기간 복원 (없으면 기본값)
+  const [annualReturnPct, setAnnualReturnPct] = useState(() => {
+    if (typeof window === 'undefined') return 7;
+    return Number(localStorage.getItem(LS_RETURN_KEY) ?? 7);
+  });
+  const [years, setYears] = useState(() => {
+    if (typeof window === 'undefined') return 20;
+    return Number(localStorage.getItem(LS_YEARS_KEY) ?? 20);
+  });
+
+  // 값이 변경될 때마다 자동 저장
+  useEffect(() => {
+    localStorage.setItem(LS_RETURN_KEY, String(annualReturnPct));
+  }, [annualReturnPct]);
+
+  useEffect(() => {
+    localStorage.setItem(LS_YEARS_KEY, String(years));
+  }, [years]);
 
   // 통화 표시 상태
   type Currency = 'USD' | 'KRW';
