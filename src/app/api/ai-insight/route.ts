@@ -61,8 +61,8 @@ ${portfolioSummary}
 마지막에 전체 포트폴리오에 대한 1줄 종합 평가를 추가하세요.`;
 
     // @google/generative-ai SDK가 v1beta를 강제하므로, v1 엔드포인트를 fetch로 직접 호출
-    // gemini-1.5-flash: 2.0-flash quota 초과 시 별도 할당량으로 사용 가능
-    const MODEL = 'gemini-1.5-flash';
+    // gemini-1.5-flash-8b: 1.5-flash quota 초과 시 별도 할당량으로 사용 가능 (경량 모델)
+    const MODEL = 'gemini-1.5-flash-8b';
     const apiUrl = `https://generativelanguage.googleapis.com/v1/models/${MODEL}:generateContent?key=${apiKey}`;
 
     const geminiRes = await fetch(apiUrl, {
