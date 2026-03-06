@@ -51,6 +51,29 @@ export function useMonthlyTracker(portfolio: PortfolioItem[], totalCurrentValue:
         newRecords.push(newRecord);
       }
 
+      // [추가] 초기 세팅 시(데이터가 이번달 1개일 때) 과거 달(1월, 2월) 더미 데이터 주입
+      // 월이 3월(getMonth() === 2) 이상일 때만 2달 전까지의 복제본을 생성
+      if (newRecords.length === 1 && today.getMonth() >= 2) {
+         const dummyRecords: MonthlyRecord[] = [];
+         for (let i = 2; i >= 1; i--) {
+            const pastDate = new Date(today.getFullYear(), today.getMonth() - i, 1);
+            const pastMonthStr = `${pastDate.getFullYear()}-${String(pastDate.getMonth() + 1).padStart(2, '0')}`;
+            
+            // 약간의 변동성/원금 수준으로 더미 자산 산출 (여기서는 동일하게 복제 후 자산만 약간 낮춤)
+            const dummyAsset = totalCurrentValue * (1 - (0.01 * i)); // 한 달 전은 -1%, 두 달 전은 -2%
+            
+            dummyRecords.push({
+               month: pastMonthStr,
+               totalAsset: dummyAsset,
+               snapshot: portfolio
+            });
+         }
+         // 과거 데이터가 앞에 오도록 기존 데이터 앞에 병합
+         const mergedRecords = [...dummyRecords, ...newRecords];
+         localStorage.setItem(LS_MONTHLY_RECORDS_KEY, JSON.stringify(mergedRecords));
+         return mergedRecords;
+      }
+
       // 로컬 스토리지에 자동 저장
       localStorage.setItem(LS_MONTHLY_RECORDS_KEY, JSON.stringify(newRecords));
       return newRecords;

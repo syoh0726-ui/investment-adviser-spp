@@ -21,6 +21,12 @@ interface MonthlyProgressChartProps {
 
 const LS_RETURN_KEY = 'spp_annual_return';
 
+// [추가] 과거 월별 고정 환율표 (실제 종가와 유사한 임의의 예시값)
+const HISTORICAL_EXCHANGE_RATES: Record<string, number> = {
+  '2024-01': 1334.0,
+  '2024-02': 1331.5,
+};
+
 export default function MonthlyProgressChart({ records, monthlyInvestment }: MonthlyProgressChartProps) {
   const [annualReturnPct, setAnnualReturnPct] = useState(7);
   const [currency, setCurrency] = useState<'USD' | 'KRW'>('USD');
@@ -76,7 +82,20 @@ export default function MonthlyProgressChart({ records, monthlyInvestment }: Mon
         }
       }
 
-      const rate = currency === 'KRW' ? exchangeRate : 1;
+      // [수정] 차트에 찍히는 달이 '현재 달'이면 실시간 환율을, '과거 달'이면 고정 환율 매핑표를 사용
+      let rate = 1;
+      if (currency === 'KRW') {
+         const isCurrentMonth =
+            currentDate.getFullYear() === new Date().getFullYear() &&
+            currentDate.getMonth() === new Date().getMonth();
+         
+         if (isCurrentMonth) {
+            rate = exchangeRate;
+         } else {
+            // 과거 달의 고정 환율표에 데이터가 없을 경우 그냥 실시간 환율 또는 1330원 기본값 폴백 적용
+            rate = HISTORICAL_EXCHANGE_RATES[record.month] || exchangeRate || 1330;
+         }
+      }
       
       return {
         month: record.month,
@@ -154,7 +173,10 @@ export default function MonthlyProgressChart({ records, monthlyInvestment }: Mon
                 <Tooltip
                     contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', color: '#fff' }}
                     itemStyle={{ color: '#fff' }}
-                    formatter={(value: number, name: string) => [formatCurrency(value), name === 'actual' ? '실제 누적 자산' : `기대 시뮬레이션 (${annualReturnPct}%)`]}
+                    formatter={(value: any, name: any) => [
+                      formatCurrency(Number(value)),
+                      name === 'actual' ? '실제 누적 자산' : `기대 시뮬레이션 (${annualReturnPct}%)`
+                    ]}
                     labelStyle={{ color: '#a1a1aa', marginBottom: '8px' }}
                 />
                 <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
